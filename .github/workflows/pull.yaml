@@ -21,13 +21,16 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Create dist folder
+        run: mkdir -p dist
+
       - name: Fetch from Ollama Library
-        run: bun run .
+        run: bun run index.ts
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: ./dist
           publish_branch: gh-pages
           keep_files: true

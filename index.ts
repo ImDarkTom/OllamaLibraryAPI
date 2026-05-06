@@ -2,7 +2,7 @@ import * as cheerio from 'cheerio';
 import { writeFile } from 'fs/promises';
 
 const MAX_PAGES = 20; // So we don't somehow get stuck in an infinite loop.
-const OUT_PATH = './data.json';
+const OUT_PATH = './dist/models.json';
 
 let data: any[] = [];
 
