@@ -3,8 +3,42 @@ import { writeFile } from 'fs/promises';
 
 const MAX_PAGES = 20; // So we don't somehow get stuck in an infinite loop.
 const OUT_PATH = './dist/models.json';
+const DELAY_MS = 1000;
+
+const MAX_ATTEMPTS = 3;
+const BACKOFF_MS = 15000; // 10 seconds if we get rate limited
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 let data: any[] = [];
+
+async function fetchData(url: string): Promise<Response | null> {
+    console.log(`Fetching page: ${url}`);
+    
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        const res = await fetch(url, {
+            headers: {
+                'HX-Request': 'true',
+                'User-Agent': 'OllamaLibraryAPI/1.0 (https://github.com/ImDarkTom/OllamaLibraryAPI)'
+            },
+        });
+
+        if (res.status === 429) { // rate limit
+            console.log(`Rate limited on attempt ${i}. Trying again...`);
+            await sleep(BACKOFF_MS);
+            continue;
+        }
+
+        if (!res.ok) {
+            console.error(`Failed to fetch page: ${res.status}, stopping...`);
+            return null;
+        }
+
+        return res;
+    }
+
+    throw new Error('Failed after max retries.');
+}
 
 for (let page = 0; page < MAX_PAGES; page++) {
     let url: string;
@@ -14,19 +48,15 @@ for (let page = 0; page < MAX_PAGES; page++) {
         url = `https://ollama.com/search?page=${page}&o=newest`;
     }
 
-    const res = await fetch(url, {
-        headers: {
-            'HX-Request': 'true',
-        }
-    });
-
-    if (!res.ok) {
-        console.error(`Failed to fetch page: ${res.status}, stopping...`);
+    const res = await fetchData(url);
+    if (!res) {
+        console.error(`Failed to fetch data on page`);
         break;
     }
 
     const html = await res.text();
     if (!html.trim()) { // once we're out of results, pages will return blank
+        console.log(`Page ${page} is blank, exiting as finished.`)
         break;
     }
 
@@ -67,7 +97,15 @@ for (let page = 0; page < MAX_PAGES; page++) {
         });
     });
 
-    page++;
+    console.log(`Added items from page ${page} into list. Current length: ${data.length}`);
+
+    console.log(`Wating ${DELAY_MS}ms before next request...`)
+    await sleep(DELAY_MS);
+}
+
+if (data.length === 0) {
+    console.error('Failed with no data');
+    process.exit(1);
 }
 
 await writeFile(OUT_PATH, JSON.stringify(data));
