@@ -25,3 +25,7 @@ Example attribution:
 ## Disclaimer
 
 This project is not affiliated with Ollama or its creators. All model data belongs to their respective owners. This repository simply provides a structured view of publicly available information on [ollama.com/models](https://ollama.com/models). This tool should not be used in any way that violates Ollama's  [Terms of Service](https://ollama.com/terms). 
+
+## License
+
+This project is [MIT](LICENSE). 
