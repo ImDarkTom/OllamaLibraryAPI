@@ -40,9 +40,9 @@ async function fetchData(url: string): Promise<Response | null> {
     throw new Error('Failed after max retries.');
 }
 
-for (let page = 0; page < MAX_PAGES; page++) {
+for (let page = 1; page < MAX_PAGES; page++) {
     let url: string;
-    if (page === 0) {
+    if (page === 1) {
         url = `https://ollama.com/search?o=newest&q=`
     } else {
         url = `https://ollama.com/search?page=${page}&o=newest`;
